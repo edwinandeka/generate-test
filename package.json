@@ -1,8 +1,8 @@
 {
     "name": "jest-generator",
     "displayName": "Jest Generator",
-    "description": "Generate a file with some test depend on ts file  ",
-    "version": "0.0.3",
+    "description": "Generate a file with some test depend on .ts file  ",
+    "version": "0.0.1",
     "engines": {
         "vscode": "^1.54.0"
     },
@@ -31,11 +31,7 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "pretest": "npm run compile",
-        "test": "node ./out/test/runTest.js"
+        "package": "vsce package"
     },
     "devDependencies": {
         "typescript": "^4.1.3",

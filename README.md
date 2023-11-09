@@ -1,12 +1,11 @@
 # Titan JS README
 
-This is the README for "Titan JS". Used only if you are working with the Titan core framework.
+This is the README for "Jest Reporter - generator". Used only if you are working with the Jest and Angular.
+
 
 ## Features
 
-Add a menu in the explorer, it allows create the files need to a titan view (.html, .js, .css). 
-
-For example if there is selected a subfolder under your modules folder you will can to create a new view:
+Add a menu in the explorer, it allows create the file needed to test the component 
 
 
 ![test1](images/test1.png)
@@ -14,20 +13,22 @@ For example if there is selected a subfolder under your modules folder you will 
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
-### 0.0.2
-
-Commands for run the STD testing were added.
-
 ### 0.0.1
 
-Initial release of ...
+Initial release of a beta version of the plugin
+This version may not generate any files.
 
 
 ### For more information
 
-* [Titan js Framework](https://dowesoft.com/page/titancore/)
+@autor (edwinandeka@gmail.com) 
+Edwin Ramiro Ospina Ruiz
+
+
+#Contact Us
+
+* [Dowesoft](https://dowesoft.com/page/)
+* [Github](https://github.com/edwinandeka)
 
 
 **Thanks!**
