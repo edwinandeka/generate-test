@@ -414,11 +414,7 @@ spyOn(${service}, 'Insert the method name');
         let matchesEmit = methodContent.match(regexEmit);
 
         if (matchesEmit) {
-            if (!spys.length && !spysServices.length) {
-                templateSpyEmits += `
-// spy
-`;
-            }
+            
             matchesEmit.forEach((emitter) => {
                 const emitterName = emitter
                     .replace('(', '')

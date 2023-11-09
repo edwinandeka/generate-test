@@ -13,6 +13,10 @@ Add a menu in the explorer, it allows create the file needed to test the compone
 
 ## Release Notes
 
+### 0.0.2
+
+some bugs were resolved
+
 ### 0.0.1
 
 Initial release of a beta version of the plugin

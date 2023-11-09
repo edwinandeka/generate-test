@@ -1,8 +1,8 @@
 {
-    "name": "jest-generator",
-    "displayName": "Jest Generator",
+    "name": "jest-reporter-generator",
+    "displayName": "Jest Reporter Generator",
     "description": "Generate a file with some test depend on .ts file  ",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "engines": {
         "vscode": "^1.54.0"
     },
@@ -38,5 +38,15 @@
         "vscode-test": "^1.4.0",
         "@types/node": "^14.0.0",
         "@types/mocha": "^8.0.3"
-    }
+    },
+    "repository": {
+        "url": "https://github.com/edwinandeka/generate-test.git",
+		"type": "git"
+    },
+    "icon": "images/logo-jest-reporter.png",
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
+	},
+	"publisher": "edwinandeka"
 }

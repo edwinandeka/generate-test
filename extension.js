@@ -32,7 +32,7 @@ function activate(context) {
                         if (activeTextEditor) {
                             let fileContent =
                                 activeTextEditor.document.getText();
-
+debugger
                             testContent = template.generateTemplate(
                                 fileContent,
                                 currentFileComponentPath
