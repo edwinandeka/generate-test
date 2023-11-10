@@ -13,6 +13,14 @@ Add a menu in the explorer, it allows create the file needed to test the compone
 
 ## Release Notes
 
+### 0.0.4
+
+some bugs were resolved on the services name
+
+### 0.0.3
+
+some bugs were resolved
+
 ### 0.0.2
 
 some bugs were resolved

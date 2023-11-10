@@ -10,6 +10,7 @@ const template = {
      * @return {void}
      */
     generateTemplate: function (fileContent, currentFileComponentPath) {
+        debugger;
         const importsTemplate = this.searchImports(fileContent);
         const uniqueServices = this.getServices(fileContent);
         const className = this.getClassName(fileContent);
@@ -245,14 +246,20 @@ ${array.join('\n').trim()}
 
             // obtenemos los nombres de los servicios importados
             const regexServicesNames = /{\s*([^\s]+)\s*}/;
-            let servicesNames = servicesImports.map((servicesName) =>
-                servicesName
-                    .match(regexServicesNames)
-                    .pop()
-                    .replace('{', '')
-                    .replace('}', '')
-                    .trim()
-            );
+            let servicesNames = servicesImports
+                .map((servicesName) => {
+                    servicesName = servicesName.match(regexServicesNames);
+                    if (servicesName) {
+                        return servicesName
+                            .pop()
+                            .replace('{', '')
+                            .replace('}', '')
+                            .trim();
+                    } else {
+                        return null;
+                    }
+                })
+                .filter((s) => s);
 
             // obtenemos los nombres de los servicios desde el constructor
             const regexServicesConstructorNames = /constructor\(([\s\S]+?)\)/;

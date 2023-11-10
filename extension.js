@@ -32,7 +32,7 @@ function activate(context) {
                         if (activeTextEditor) {
                             let fileContent =
                                 activeTextEditor.document.getText();
-debugger
+                            debugger;
                             testContent = template.generateTemplate(
                                 fileContent,
                                 currentFileComponentPath
@@ -70,7 +70,7 @@ debugger
                 }
 
                 vscode.window.showInformationMessage(
-                    `Jest tests have been generated for  ${extension}`
+                    `Jest tests have been generated`
                 );
             } else {
                 vscode.window.showInformationMessage(
