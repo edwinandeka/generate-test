@@ -36,9 +36,9 @@ const processUtil = {
     printParams: function (params) {
         let template = '';
         params.forEach((p) => {
-            template += `const ${p.name}: ${p.type} = ${this.generateParamValue(
-                p
-            )};
+            template += `        const ${p.name}: ${
+                p.type
+            } = ${this.generateParamValue(p)};
 `;
         });
 
@@ -50,8 +50,14 @@ const processUtil = {
      * @description [descripción de la funcion]
      * @return {void}
      */
-    printTestRun: function (params, returnType, methodName, methodContent) {
-        let template = '';
+    printTestRun: function (
+        params,
+        returnType,
+        methodName,
+        methodContent,
+        isTimeoutMethod
+    ) {
+        let template = '        ';
 
         if (returnType != 'void') {
             template += `const result: ${returnType} = `;
@@ -68,6 +74,11 @@ const processUtil = {
             template += `component.${methodName}(${parameters});
 `;
         }
+
+        if (isTimeoutMethod) {
+            template += `tick(100);
+`;
+        }
         return template;
     },
 
@@ -78,7 +89,7 @@ const processUtil = {
      */
     printExpectedResult: function (returnType) {
         if (returnType != 'void') {
-            return `const expectedResult: ${returnType} = ${this.generateParamValue(
+            return `        const expectedResult: ${returnType} = ${this.generateParamValue(
                 {
                     type: returnType,
                     name: 'expectedResult',
@@ -116,14 +127,17 @@ const processUtil = {
             this.generateTemplateProperties(methodContent);
 
         // 3) check spy
-
         //from methods
-        const { templateSpyMethods, templateOutcomesMethods } =
-            this.generateTemplateSpyMethods(methodContent, otherMethods);
+        const { templateSpyMethods, templateOutcomesSpyMethods } =
+            this.generateTemplateSpyMethods(
+                methodContent,
+                otherMethods,
+                methodName
+            );
 
         //from services
         const { templateSpyServices, templateOutcomesSpyServices } =
-            this.generateTemplateSpyServices(methodContent);
+            this.generateTemplateSpyServices(methodContent, params);
 
         //from emits
         const { templateSpyEmits, templateOutcomesSpyEmits } =
@@ -133,48 +147,93 @@ const processUtil = {
         let templateOutcomesSubscriptions = '';
 
         if (methodContent.includes('subscriptions.unsubscribe')) {
-            templateSubscriptions += `spyOn(component['subscriptions'], 'unsubscribe');`;
-            templateOutcomesSubscriptions += `expect(component['subscriptions'].unsubscribe).toHaveBeenCalledTimes(1);`;
+            templateSubscriptions += `        spyOn(component['subscriptions'], 'unsubscribe');`;
+            templateOutcomesSubscriptions += `        expect(component['subscriptions'].unsubscribe).toHaveBeenCalledTimes(1);`;
+        }
+
+        // consts
+        let constTemplate = '';
+        if (params.length || templateProperties.length) {
+            constTemplate += '        // consts\n';
+        }
+
+        if (params.length) {
+            constTemplate += this.printParams(params);
+        }
+        if (templateProperties.length) {
+            constTemplate += templateProperties;
+        }
+
+        if (returnType != 'void') {
+            constTemplate += this.printExpectedResult(returnType);
+        }
+
+        // spy
+        let spyTemplate = '';
+        if (
+            templateSpyMethods.trim().length ||
+            templateSpyServices.trim().length ||
+            templateSpyEmits.trim().length ||
+            templateSubscriptions.trim().length
+        ) {
+            spyTemplate += '        // spy\n';
+        }
+        if (templateSpyMethods.length) {
+            spyTemplate += templateSpyMethods;
+        }
+        if (templateSpyServices.length) {
+            spyTemplate += templateSpyServices;
+        }
+        if (templateSpyEmits.length) {
+            spyTemplate += templateSpyEmits;
+        }
+        if (templateSubscriptions.length) {
+            spyTemplate += templateSubscriptions;
+        }
+
+        // outcomes
+        let outcomesTemplate = '';
+        if (isDetectorRefChanges) {
+            outcomesTemplate +=
+                '        expect(changeDetectorRef.detectChanges).toHaveBeenCalledTimes(1);';
+        }
+
+        if (templateOutcomesProperties.length) {
+            outcomesTemplate += templateOutcomesProperties;
+        }
+        if (templateOutcomesSpyMethods.length) {
+            outcomesTemplate += templateOutcomesSpyMethods;
+        }
+        if (templateOutcomesSpyServices.length) {
+            outcomesTemplate += templateOutcomesSpyServices;
+        }
+        if (templateOutcomesSpyEmits.length) {
+            outcomesTemplate += templateOutcomesSpyEmits;
+        }
+        if (templateOutcomesSubscriptions.length) {
+            outcomesTemplate += templateOutcomesSubscriptions;
+        }
+        if (returnType != 'void') {
+            outcomesTemplate +=
+                '        expect(result).toStrictEqual(expectedResult);';
         }
 
         // ) generate the template
         let template = `
     ${this.printMethodComments(methodName, isTimeoutMethod)}
-        ${params.length || templateProperties.length ? '// consts' : ''}
-        ${templateProperties}
-        ${this.printParams(params)}
-        ${this.printExpectedResult(returnType)}
-
-        // spy
-        ${templateSpyMethods}
-        ${templateSpyServices}
-        ${templateSpyEmits}
-        ${templateSubscriptions}
-
+${constTemplate}
+${spyTemplate}
         // test
-        ${this.printTestRun(params, returnType, methodName, methodContent)}
-        
-        ${isTimeoutMethod ? 'tick(100);' : ''}
-        
+${this.printTestRun(
+    params,
+    returnType,
+    methodName,
+    methodContent,
+    isTimeoutMethod
+)}
         // outcomes
-        ${
-            isDetectorRefChanges
-                ? 'expect(changeDetectorRef.detectChanges).toHaveBeenCalledTimes(1);'
-                : ''
-        }
-        ${templateOutcomesProperties}
-        ${templateOutcomesMethods}
-        ${templateOutcomesSpyServices}
-        ${templateOutcomesSpyEmits}
-        ${templateOutcomesSubscriptions}
-        ${
-            returnType != 'void'
-                ? 'expect(result).toStrictEqual(expectedResult);'
-                : ''
-        }
-
-
-    }) ${isTimeoutMethod ? ')' : ''};
+${outcomesTemplate}
+    })${isTimeoutMethod ? ')' : ''};
     
     `;
 
@@ -215,7 +274,7 @@ const processUtil = {
                     attr = '_' + attr;
                 }
 
-                templateProperties += `const ${attr}Expected: ${type} = ${this.generateParamValue(
+                templateProperties += `        const ${attr}Expected: ${type} = ${this.generateParamValue(
                     {
                         type: type,
                         name: name,
@@ -224,10 +283,10 @@ const processUtil = {
 `;
 
                 if (['boolean', 'number'].includes(type)) {
-                    templateOutcomesProperties += `expect(component['${attr}']).toBe(${attr}Expected);
+                    templateOutcomesProperties += `        expect(component['${attr}']).toBe(${attr}Expected);
 `;
                 } else {
-                    templateOutcomesProperties += `expect(component['${attr}']).toStrictEqual(${attr}Expected);
+                    templateOutcomesProperties += `        expect(component['${attr}']).toStrictEqual(${attr}Expected);
 `;
                 }
             });
@@ -244,17 +303,23 @@ const processUtil = {
      * @description generete template for spy
      * @return {void}
      */
-    generateTemplateSpyMethods: function (methodContent, otherMethods) {
+    generateTemplateSpyMethods: function (
+        methodContent,
+        otherMethods,
+        methodName
+    ) {
         let templateSpyMethods = ``;
         let templateOutcomesSpyMethods = ``;
-        let keys = Object.keys(this.methods);
+        let templateParams = ``;
+
+        let keys = Object.keys(this.methods).filter((m) => m != methodName);
 
         // spy
         const spys = keys.filter((m) => methodContent.includes(m));
 
         spys.forEach(
             (m) =>
-                (templateSpyMethods += `spyOn(component as any, '${m}');
+                (templateSpyMethods += `        spyOn(component as any, '${m}');
 `)
         );
 
@@ -294,6 +359,7 @@ const processUtil = {
                             .replace(matches[0], '')
                             .replace(/this\./gim, 'component.')
                             .trim();
+                        templateParams = this.generatePropertiesMethod(param);
 
                         templateOutcomesSpyMethods +=
                             this.printToHaveBeenCalledWith({
@@ -309,6 +375,9 @@ const processUtil = {
             }
         });
 
+        templateSpyMethods += `
+        ${templateParams}`;
+
         return {
             templateSpyMethods,
             templateOutcomesSpyMethods,
@@ -320,9 +389,10 @@ const processUtil = {
      * @description [descripción de la funcion]
      * @return {void}
      */
-    generateTemplateSpyServices: function (methodContent) {
+    generateTemplateSpyServices: function (methodContent, params) {
         let templateSpyServices = ``;
         let templateOutcomesSpyServices = ``;
+        let templateParams = ``;
 
         let spysServices = this.services.filter((s) =>
             methodContent.includes(s.name)
@@ -338,12 +408,12 @@ const processUtil = {
 
                 if (!matches) {
                     templateSpyServices += `/** Method no found **/
-spyOn(${service}, 'Insert the method name');
+        spyOn(${service}, 'Insert the method name');
 `;
                 }
 
                 if (matches && matches.length == 3) {
-                    templateSpyServices += `spyOn(${service}, '${matches[2]}');
+                    templateSpyServices += `        spyOn(${service}, '${matches[2]}');
 `;
 
                     //buscamos si el servicio NO tiene parametros
@@ -375,6 +445,9 @@ spyOn(${service}, 'Insert the method name');
                                 .replace(/this\./gim, 'component.')
                                 .trim();
 
+                            templateParams =
+                                this.generatePropertiesMethod(param);
+
                             templateOutcomesSpyServices +=
                                 this.printToHaveBeenCalledWith({
                                     service: s,
@@ -390,10 +463,50 @@ spyOn(${service}, 'Insert the method name');
             });
         }
 
+        templateSpyServices += `
+        ${templateParams}`;
+
         return {
             templateSpyServices,
             templateOutcomesSpyServices,
         };
+    },
+
+    /**
+     * @name generatePropertiesMethod
+     * @description [descripción de la funcion]
+     * @return {void}
+     */
+    generatePropertiesMethod: function (param) {
+        let template = '';
+        let paramsArray = param.split(',').map((m) => m.trim());
+
+        paramsArray.forEach((t) => {
+            if (t.includes('component.')) {
+                let propertyName = t.replace('component.', '');
+
+                let aux = propertyName.split('.');
+                propertyName = aux.shift();
+
+                let propertiesTemplate = '';
+
+                if (!propertyName.includes(':')) {
+                    propertiesTemplate += `component['${propertyName}'] = ${this.generateParamValue(
+                        {
+                            name: propertyName,
+                            type: this.properties[propertyName],
+                        }
+                    )}
+            
+`;
+                }
+                if (!template.includes(propertiesTemplate)) {
+                    template += propertiesTemplate;
+                }
+            }
+        });
+
+        return template;
     },
 
     /**
@@ -404,6 +517,7 @@ spyOn(${service}, 'Insert the method name');
     generateTemplateSpyEmits: function (methodContent) {
         let templateSpyEmits = ``;
         let templateOutcomesSpyEmits = ``;
+        let templateParams = ``;
 
         // buscamos los emit
         const regexEmit = new RegExp(
@@ -414,14 +528,13 @@ spyOn(${service}, 'Insert the method name');
         let matchesEmit = methodContent.match(regexEmit);
 
         if (matchesEmit) {
-            
             matchesEmit.forEach((emitter) => {
                 const emitterName = emitter
                     .replace('(', '')
                     .replace('.emit', '')
                     .replace('this.', '');
 
-                templateSpyEmits += `spyOn(component['${emitterName}'], 'emit');
+                templateSpyEmits += `        spyOn(component['${emitterName}'], 'emit');
 `;
 
                 //buscamos si el metodo NO tiene parametros
@@ -455,6 +568,7 @@ spyOn(${service}, 'Insert the method name');
                             .replace(emitter, '')
                             .replace(/this\./gim, 'component.')
                             .trim();
+                        templateParams = this.generatePropertiesMethod(param);
 
                         templateOutcomesSpyEmits +=
                             this.printToHaveBeenCalledWith({
@@ -467,6 +581,9 @@ spyOn(${service}, 'Insert the method name');
                 }
             });
         }
+
+        templateSpyEmits += `
+        ${templateParams}`;
 
         return {
             templateSpyEmits,
@@ -512,13 +629,25 @@ spyOn(${service}, 'Insert the method name');
      * @return {void}
      */
     printToHaveBeenCalledTimes: function (data) {
+        let accessModifier = 'public';
+
+        if (this.methods[data.method]) {
+            accessModifier = this.methods[data.method].accessModifier;
+        }
+
+        const isPrivate = accessModifier == 'private';
+
         if (data.emit) {
-            return `expect(component['${data.emit}'].emit).toHaveBeenCalledTimes(1);
+            return `        expect(component['${data.emit}'].emit).toHaveBeenCalledTimes(1);
             `;
         } else {
-            return `expect(${data.method ? 'component' : data.service.name}.${
+            return `        expect(${
+                data.method ? 'component' : data.service.name
+            }${isPrivate?'':'.'}${
                 data.method
-                    ? data.method
+                    ? isPrivate
+                        ? `['${data.method}']`
+                        : data.method
                     : data.matches
                     ? data.matches[2]
                     : 'SOME_METHOD'
@@ -533,13 +662,24 @@ spyOn(${service}, 'Insert the method name');
      * @return {void}
      */
     printToHaveBeenCalledWith: function (data) {
+        let accessModifier = 'public';
+
+        if (this.methods[data.method]) {
+            accessModifier = this.methods[data.method].accessModifier;
+        }
+        const isPrivate = accessModifier == 'private';
+
         if (data.emit) {
-            return `expect(component['${data.emit}'].emit).toHaveBeenCalledWith(${data.param});
+            return `        expect(component['${data.emit}'].emit).toHaveBeenCalledWith(${data.param});
 `;
         } else {
-            return `expect(${data.method ? 'component' : data.service.name}.${
+            return `        expect(${
+                data.method ? 'component' : data.service.name
+            }${isPrivate?'':'.'}${
                 data.method
-                    ? data.method
+                    ? isPrivate
+                        ? `['${data.method}']`
+                        : data.method
                     : data.matches
                     ? data.matches[2]
                     : 'SOME_METHOD'
@@ -554,6 +694,9 @@ spyOn(${service}, 'Insert the method name');
      * @return {void}
      */
     generateParamValue: function (param) {
+        if (!param.type) {
+            return `{} as any`;
+        }
         if (param.type == 'number[]') {
             return `[${util.getRandomNumber()}, ${util.getRandomNumber()}, ${util.getRandomNumber()}, ${util.getRandomNumber()}]`;
         }

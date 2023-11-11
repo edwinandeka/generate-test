@@ -10,7 +10,6 @@ const template = {
      * @return {void}
      */
     generateTemplate: function (fileContent, currentFileComponentPath) {
-        debugger;
         const importsTemplate = this.searchImports(fileContent);
         const uniqueServices = this.getServices(fileContent);
         const className = this.getClassName(fileContent);
