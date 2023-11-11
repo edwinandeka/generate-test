@@ -251,7 +251,7 @@ ${outcomesTemplate}
 
         // validamos las asignaciones a la clase
         const regexProperties = new RegExp(
-            `this\\s*\\.\\s*(\\w+)\\s*\\=\\s*(!||\\w+)*\\.*(\\w+)`,
+            `this\\s*\\.\\s*(\\w+)\\s*\\=\\s*(!||\\w+)*\\.*([\\w\\[\\]\\s{}:'",]+)`,
             'gmi'
         );
 

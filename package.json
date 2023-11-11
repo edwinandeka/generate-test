@@ -2,7 +2,7 @@
     "name": "jest-reporter-generator",
     "displayName": "Jest Reporter Generator",
     "description": "Generate a file with some test depend on .ts file  ",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "engines": {
         "vscode": "^1.54.0"
     },
