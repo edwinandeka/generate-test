@@ -55,10 +55,26 @@ const typescript = {
 
             const returnType = node.type ? node.type.getText() : 'void';
 
+            // Obtener el modificador de acceso (public, private, protected)
+            let accessModifier = 'public'; // Por defecto es público
+            if (node.modifiers) {
+                for (const modifier of node.modifiers) {
+                    if (modifier.kind === ts.SyntaxKind.PrivateKeyword) {
+                        accessModifier = 'private';
+                    } else if (
+                        modifier.kind === ts.SyntaxKind.ProtectedKeyword
+                    ) {
+                        accessModifier = 'protected';
+                    }
+                    // Puedes agregar más lógica para manejar otros modificadores si es necesario
+                }
+            }
+
             this.methods[methodName] = {
                 code: methodText,
                 parameters: parameters,
                 returnType: returnType,
+                accessModifier: accessModifier,
             };
         }
 
