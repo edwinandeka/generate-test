@@ -76,7 +76,7 @@ const process = {
                         )};
     `;
 
-                        if (['boolean', 'number'].includes(type)) {
+                        if (['boolean', 'number', 'string'].includes(type)) {
                             templateOutcomesProperties += `expect(component['${attr}']).toBe(${attr}Expected);
     `;
                         } else {
